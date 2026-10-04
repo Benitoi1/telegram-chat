@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
 
-const API_URL = ''
-
 export default function App() {
   const [idInstance, setId] = useState(localStorage.getItem('idInstance') || '')
   const [token, setToken] = useState(localStorage.getItem('token') || '')
@@ -16,7 +14,8 @@ export default function App() {
   const [text, setText] = useState('')
   const [sendError, setSendError] = useState('')
 
-  const base = `${API_URL}/waInstance${idInstance}`
+  const apiUrl = `https://${idInstance.trim().slice(0, 4)}.api.green-api.com`
+  const base = `${apiUrl}/waInstance${idInstance}`
 
   async function handleLogin() {
     setError('')
@@ -165,14 +164,14 @@ export default function App() {
 
   if (!loggedIn) {
     return (
-      <div style={{ maxWidth: 320, margin: '80px auto' }}>
+        <div className="login">
         <h2>Вход</h2>
-        <input placeholder="idInstance" value={idInstance}
-          onChange={e => setId(e.target.value)} />
-        <input placeholder="apiTokenInstance" value={token}
-          onChange={e => setToken(e.target.value)} />
-        <button onClick={handleLogin}>Войти</button>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+        <input className="field" placeholder="idInstance" value={idInstance}
+          onChange={e => setToken(e.target.value.trim())} />
+        <input className="field" type="password" placeholder="apiTokenInstance"
+          value={token} onChange={e => setToken(e.target.value)} />
+        <button className="btn" onClick={handleLogin}>Войти</button>
+        {error && <p className="error">{error}</p>}
       </div>
     )
   }
@@ -180,51 +179,51 @@ export default function App() {
   const active = chats.find(c => c.chatId === activeId)
 
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
-      <div style={{ width: 300, borderRight: '1px solid #ccc', padding: 12 }}>
-        <input placeholder="Номер или @username" value={contact}
-          onChange={e => setContact(e.target.value)} />
-        <button onClick={createChat} disabled={loading}>Создать чат</button>
-        {chatError && <p style={{ color: 'red' }}>{chatError}</p>}
-        {chats.map(c => (
-          <div key={c.chatId} onClick={() => setActiveId(c.chatId)}
-            style={{
-              padding: 8, cursor: 'pointer',
-              background: c.chatId === activeId ? '#eee' : 'none'
-            }}>
-            {c.title}
-          </div>
-        ))}
+     <div className="app">
+      <div className="sidebar">
+        <div className="new-chat">
+          <input className="field" placeholder="Номер или @username"
+            value={contact} onChange={e => setContact(e.target.value)} />
+          <button className="btn" onClick={createChat} disabled={loading}>+</button>
+        </div>
+        {chatError && <p className="error">{chatError}</p>}
+        {chats.map(c => {
+          const last = c.messages[c.messages.length - 1]
+          return (
+            <div key={c.chatId} onClick={() => setActiveId(c.chatId)}
+              className={`chat-item ${c.chatId === activeId ? 'active' : ''}`}>
+              <div className="avatar">{c.title.replace('@', '').charAt(0).toUpperCase()}</div>
+              <div className="chat-info">
+                <div className="chat-title">{c.title}</div>
+                <div className="chat-preview">{last ? last.text : 'Нет сообщений'}</div>
+              </div>
+            </div>
+          )
+        })}
       </div>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+
+      <div className="main">
         {!active ? (
-          <div style={{ padding: 12 }}>Выберите чат или создайте новый</div>
+          <div className="placeholder">Выберите чат или создайте новый</div>
         ) : (
           <>
-            <div style={{ padding: 12, borderBottom: '1px solid #ccc' }}>
-              {active.title}
+            <div className="header">
+              <div className="avatar">{active.title.replace('@', '').charAt(0).toUpperCase()}</div>
+              <div className="chat-title">{active.title}</div>
             </div>
-            <div style={{
-              flex: 1, overflowY: 'auto', padding: 12,
-              display: 'flex', flexDirection: 'column', gap: 6
-            }}>
+            <div className="messages">
               {active.messages.map(m => (
-                <div key={m.id} style={{
-                  alignSelf: m.from === 'me' ? 'flex-end' : 'flex-start',
-                  background: m.from === 'me' ? '#2b6cff' : '#444',
-                  color: '#fff', padding: '6px 10px', borderRadius: 12,
-                  maxWidth: '70%'
-                }}>
+                <div key={m.id} className={`bubble ${m.from === 'me' ? 'me' : 'them'}`}>
                   {m.text}
                 </div>
               ))}
             </div>
-            {sendError && <p style={{ color: 'red', margin: 8 }}>{sendError}</p>}
-            <div style={{ display: 'flex', padding: 12, gap: 8 }}>
-              <input style={{ flex: 1 }} placeholder="Сообщение" value={text}
+            {sendError && <p className="error">{sendError}</p>}
+            <div className="composer">
+              <input className="field" placeholder="Сообщение" value={text}
                 onChange={e => setText(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && sendMessage()} />
-              <button onClick={sendMessage}>Отправить</button>
+              <button className="send" onClick={sendMessage}>➤</button>
             </div>
           </>
         )}

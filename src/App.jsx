@@ -164,12 +164,14 @@ export default function App() {
 
   if (!loggedIn) {
     return (
-        <div className="login">
+      <div className="login">
         <h2>Вход</h2>
-        <input className="field" placeholder="idInstance" value={idInstance}
+        <input className="field" name="idInstance" autoComplete="off"
+          inputMode="numeric" placeholder="idInstance" value={idInstance}
+          onChange={e => setId(e.target.value.trim())} />
+        <input className="field" name="apiTokenInstance" type="password"
+          autoComplete="new-password" placeholder="apiTokenInstance" value={token}
           onChange={e => setToken(e.target.value.trim())} />
-        <input className="field" type="password" placeholder="apiTokenInstance"
-          value={token} onChange={e => setToken(e.target.value)} />
         <button className="btn" onClick={handleLogin}>Войти</button>
         {error && <p className="error">{error}</p>}
       </div>
@@ -179,7 +181,7 @@ export default function App() {
   const active = chats.find(c => c.chatId === activeId)
 
   return (
-     <div className="app">
+    <div className="app">
       <div className="sidebar">
         <div className="new-chat">
           <input className="field" placeholder="Номер или @username"

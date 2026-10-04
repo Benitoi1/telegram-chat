@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const API_URL = ''
 
@@ -23,7 +23,6 @@ export default function App() {
     try {
       const res = await fetch(`${base}/getStateInstance/${token}`)
       const data = await res.json()
-      console.log(data)
       if (data.stateInstance === 'authorized') {
         localStorage.setItem('idInstance', idInstance)
         localStorage.setItem('token', token)
@@ -43,9 +42,14 @@ export default function App() {
     }
     const value = contact.trim()
     if (!value) return
+    const digits = value.replace(/\D/g, '')
+    if (!value.startsWith('@') && digits.length < 8) {
+      setChatError('Введите номер цифрами (например 79876543210) или @username')
+      return
+    }
     const body = value.startsWith('@')
       ? { username: value }
-      : { phoneNumber: Number(value.replace(/\D/g, '')) }
+      : { phoneNumber: Number(digits) }
     setLoading(true)
     try {
       const res = await fetch(`${base}/checkAccount/${token}`, {
@@ -105,6 +109,58 @@ export default function App() {
       setSendError('Ошибка сети')
     }
   }
+
+  useEffect(() => {
+    if (!loggedIn) return
+    let stopped = false
+
+    async function poll() {
+      while (!stopped) {
+        try {
+          const res = await fetch(`${base}/receiveNotification/${token}?receiveTimeout=5`)
+          const raw = await res.text()
+          if (!res.ok) {
+            await new Promise(r => setTimeout(r, 3000))
+            continue
+          }
+          const data = raw ? JSON.parse(raw) : null
+          if (!data) continue
+
+          const body = data.body || data
+
+          if (
+            body.typeWebhook === 'incomingMessageReceived' &&
+            body.messageData?.typeMessage === 'textMessage'
+          ) {
+            const chatId = body.senderData.chatId
+            const title = body.senderData.chatName || body.senderData.senderName || chatId
+            const msg = {
+              id: body.idMessage,
+              text: body.messageData.textMessageData.textMessage,
+              from: 'them',
+            }
+            setChats(prev => {
+              const chat = prev.find(c => c.chatId === chatId)
+              if (!chat) return [...prev, { chatId, title, messages: [msg] }]
+              if (chat.messages.some(m => m.id === msg.id)) return prev
+              return prev.map(c =>
+                c.chatId === chatId ? { ...c, messages: [...c.messages, msg] } : c
+              )
+            })
+          }
+
+          await fetch(`${base}/deleteNotification/${token}/${data.receiptId}`, {
+            method: 'DELETE',
+          })
+        } catch (e) {
+          await new Promise(r => setTimeout(r, 3000))
+        }
+      }
+    }
+
+    poll()
+    return () => { stopped = true }
+  }, [loggedIn])
 
 
   if (!loggedIn) {

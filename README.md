@@ -28,6 +28,12 @@ Telegram Chat (GREEN-API)
 2. Локальный запуск
 3. Откройте в браузере адрес, который покажет терминал
 
+Локальный запуск:
+git clone https://github.com/Benitoi1/telegram-chat
+cd telegram-chat
+npm install
+npm run dev
+
 Как пользоваться:
 1. Введите idInstance и apiTokenInstance, нажмите «Войти».
 2. В поле слева введите номер телефона получателя в международном формате без плюса (например, 79876543210) или его @username, нажмите «+». Чат появится в списке

@@ -1,16 +1,60 @@
-# React + Vite
+Telegram Chat (GREEN-API)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Веб-интерфейс для отправки и получения текстовых сообщений в Telegram через сервис GREEN-API
+Тестовое задание на должность «Фронтенд разработчик React»
 
-Currently, two official plugins are available:
+Демо: https://telegram-chat-two.vercel.app/
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Возможности:
+1. Вход по учётным данным GREEN-API (idInstance, apiTokenInstance)
+2. Создание чата по номеру телефона или @username
+3. Отправка текстовых сообщений
+4. Получение входящих текстовых сообщений
+5. Отображение списка чатов и окна переписки
 
-## React Compiler
+Технологии:
+1. React 19 + Vite 
+2. GREEN-API: Telegram (HTTP API)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Что нужно заранее:
+1. Установленный Node.js (LTS)
+2. Аккаунт в консоли GREEN-API и созданный Telegram-инстанс со статусом Authorized
+3. idInstance и apiTokenInstance из консоли
 
-## Expanding the Oxlint configuration
+Настройка инстанса:
+1. В консоли GREEN-API откройте инстанс, нажмите «Изменить» и
+   включите «Получать уведомления о входящих сообщениях и файлах»,
+   сохраните настройки и подождите до 5 минут, пока они применятся
+2. Локальный запуск
+3. Откройте в браузере адрес, который покажет терминал
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Как пользоваться:
+1. Введите idInstance и apiTokenInstance, нажмите «Войти».
+2. В поле слева введите номер телефона получателя в международном формате без плюса (например, 79876543210) или его @username, нажмите «+». Чат появится в списке
+3. Напишите сообщение и нажмите Enter или кнопку отправки
+4. Ответ также отобразится в чате
+
+Как это работает:
+1. Действие
+2. Метод GREEN-API
+3. Проверка входа
+4. getStateInstance
+5. Поиск чата по номеру / username
+6. checkAccount (возвращает chatId)
+7. Отправка сообщения
+8. sendMessage
+9. Получение сообщений
+10. receiveNotification (цикл)
+11. Удаление уведомления из очереди
+12. deleteNotification
+
+Адрес API формируется из первых четырёх цифр idInstance (https://XXXX.api.green-api.com)
+
+Заметки:
+Учётные данные хранятся только в localStorage вашего браузера и отправляются только в GREEN-API.
+Список чатов и сообщений хранится в памяти приложения: при обновлении страницы он очищается.
+Обрабатываются только текстовые сообщения, остальные типы уведомлений игнорируются.
+На тарифе Developer у GREEN-API есть лимит на количество чатов
+
+Автор
+Шарапова Анна, Telegram: @ewklaz

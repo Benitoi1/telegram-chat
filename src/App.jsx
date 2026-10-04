@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-const API_URL = 'https://4100.api.green-api.com'
+const API_URL = ''
 
 export default function App() {
   const [idInstance, setId] = useState(localStorage.getItem('idInstance') || '')
@@ -13,6 +13,8 @@ export default function App() {
   const [contact, setContact] = useState('')
   const [chatError, setChatError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [text, setText] = useState('')
+  const [sendError, setSendError] = useState('')
 
   const base = `${API_URL}/waInstance${idInstance}`
 
@@ -61,10 +63,11 @@ export default function App() {
         return
       }
       if (!chats.some(c => c.chatId === data.chatId)) {
-        setChats([
-          ...chats,
-          { chatId: data.chatId, title: data.username || value, messages: [] },
-        ])
+        setChats(prev =>
+          prev.some(c => c.chatId === data.chatId)
+            ? prev
+            : [...prev, { chatId: data.chatId, title: data.username || value, messages: [] }]
+        )
       }
       setActiveId(data.chatId)
       setContact('')
@@ -72,6 +75,34 @@ export default function App() {
       setChatError('Ошибка сети')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function sendMessage() {
+    const message = text.trim()
+    if (!message || !activeId) return
+    setSendError('')
+    try {
+      const res = await fetch(`${base}/sendMessage/${token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatId: activeId, message }),
+      })
+      const data = await res.json()
+      if (!res.ok || data.status === false) {
+        setSendError('Не удалось отправить сообщение')
+        return
+      }
+      setChats(prev =>
+        prev.map(c =>
+          c.chatId === activeId
+            ? { ...c, messages: [...c.messages, { id: data.idMessage || Date.now(), text: message, from: 'me' }] }
+            : c
+        )
+      )
+      setText('')
+    } catch {
+      setSendError('Ошибка сети')
     }
   }
 
@@ -109,9 +140,38 @@ export default function App() {
           </div>
         ))}
       </div>
-      <div style={{ flex: 1, padding: 12 }}>
-        {active ? `Чат с ${active.title}.`
-          : 'Выберите чат или создайте новый'}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        {!active ? (
+          <div style={{ padding: 12 }}>Выберите чат или создайте новый</div>
+        ) : (
+          <>
+            <div style={{ padding: 12, borderBottom: '1px solid #ccc' }}>
+              {active.title}
+            </div>
+            <div style={{
+              flex: 1, overflowY: 'auto', padding: 12,
+              display: 'flex', flexDirection: 'column', gap: 6
+            }}>
+              {active.messages.map(m => (
+                <div key={m.id} style={{
+                  alignSelf: m.from === 'me' ? 'flex-end' : 'flex-start',
+                  background: m.from === 'me' ? '#2b6cff' : '#444',
+                  color: '#fff', padding: '6px 10px', borderRadius: 12,
+                  maxWidth: '70%'
+                }}>
+                  {m.text}
+                </div>
+              ))}
+            </div>
+            {sendError && <p style={{ color: 'red', margin: 8 }}>{sendError}</p>}
+            <div style={{ display: 'flex', padding: 12, gap: 8 }}>
+              <input style={{ flex: 1 }} placeholder="Сообщение" value={text}
+                onChange={e => setText(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && sendMessage()} />
+              <button onClick={sendMessage}>Отправить</button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
